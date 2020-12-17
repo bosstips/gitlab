@@ -1,0 +1,62 @@
+variables:
+  ARRIFACT_DOCKER_IMAGE: 10.211.55.170/myapp:latest
+
+before_script:
+  - export TIME_NOW=$(date +%Y-%m-%d_%s)
+
+stages:
+  - check
+  - test
+  - build
+  - publish
+  - clean
+
+check:
+  stage: check
+  script:
+    - echo Checking
+
+test:
+  stage: test
+  script:
+    - echo Testing
+
+build:
+  stage: build
+  script:
+    - echo Building
+    - make docker
+    - docker images
+  only:
+    refs:
+      - master
+    changes:
+      - docker/nginx/*
+      - docker/nginx/web/**/*
+      - docker/nginx/web/**/**/*
+      - docker/nginx/web/**/**/**/*
+      - docker/nginx/web/**/**/**/**/*
+
+publish:
+  stage: publish
+  script:    
+    - docker push ${ARRIFACT_DOCKER_IMAGE}
+    - docker tag ${ARRIFACT_DOCKER_IMAGE} ${ARRIFACT_DOCKER_IMAGE}.${TIME_NOW}
+    - docker push ${ARRIFACT_DOCKER_IMAGE}.${TIME_NOW}
+  only:
+    refs:
+      - master
+    changes:
+      - docker/nginx/*
+      - docker/nginx/web/**/*
+      - docker/nginx/web/**/**/*
+      - docker/nginx/web/**/**/**/*
+      - docker/nginx/web/**/**/**/**/*
+
+clean:
+  stage: clean
+  script:
+    - docker rmi -f ${ARRIFACT_DOCKER_IMAGE}
+    - docker rmi -f ${ARRIFACT_DOCKER_IMAGE}.${TIME_NOW}
+
+
